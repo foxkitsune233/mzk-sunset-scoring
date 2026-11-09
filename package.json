@@ -1,0 +1,17 @@
+{
+  "name": "group-peer-scoring",
+  "version": "1.0.0",
+  "private": true,
+  "description": "组内匿名互评 · 分数重分配（学生端 / 老师端 / 简单后端）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-scoring.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

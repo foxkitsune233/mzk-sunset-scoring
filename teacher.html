@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mzk sunset互评器 · 老师端</title>
+<style>
+:root{
+  --bg:#f4f6fb; --card:#fff; --line:#e4e9f2; --ink:#1c2536; --muted:#6b7689;
+  --brand:#3b5bdb; --brand-soft:#edf1ff; --ok:#0ca678; --ok-soft:#e6f7f1;
+  --err:#e03131; --err-soft:#fff0f0; --warn:#e8590c; --warn-soft:#fff3e6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.6}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;align-items:center;gap:12px;margin:8px 0 20px;flex-wrap:wrap}
+.logo{width:42px;height:42px;border-radius:12px;background:#1c2536;color:#fff;
+  display:grid;place-items:center;font-size:19px;font-weight:700;flex:none}
+h1{font-size:19px;margin:0}
+.sub{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.badge{margin-left:auto;background:var(--warn-soft);color:var(--warn);border:1px solid #ffdcb8;
+  border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;
+  margin-bottom:16px;box-shadow:0 2px 10px rgba(28,37,54,.035)}
+.card h2{font-size:15px;margin:0 0 16px;display:flex;align-items:center;gap:8px}
+.card h2 .num{width:22px;height:22px;border-radius:7px;background:var(--brand-soft);color:var(--brand);
+  font-size:12px;display:grid;place-items:center;font-weight:700;flex:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+label.fld{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+input[type=text],input[type=number],select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);
+  border-radius:9px;background:#fbfcfe;color:var(--ink);font-size:14px;font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
+textarea{resize:vertical;line-height:1.7}
+.roster-state{font-size:12px;font-weight:600;border-radius:8px;padding:5px 10px}
+.roster-state.ok{background:var(--ok-soft);color:#0a6b4f}
+.roster-state.warn{background:var(--warn-soft);color:#9a4208}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 16px;border-radius:9px;
+  font-size:13.5px;font-family:inherit;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.btn.primary:hover{background:#324bc0;color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sm{padding:6px 11px;font-size:12.5px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.err{color:var(--err);font-size:12.5px;min-height:18px;margin-top:8px}
+.hidden{display:none !important}
+.note{background:var(--brand-soft);border:1px solid #dbe3ff;border-radius:10px;padding:11px 14px;
+  font-size:12.8px;color:#364380;margin:12px 0}
+.note.warn{background:var(--warn-soft);border-color:#ffdcb8;color:#9a4208}
+.note.ok{background:var(--ok-soft);border-color:#c8ecdd;color:#0a6b4f}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0}
+.kv > div{background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kv .k{font-size:11.5px;color:var(--muted)}
+.kv .v{font-size:16px;font-weight:700;margin-top:2px;word-break:break-all}
+.codes{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.code{background:#f2f5fd;border:1px dashed #c7d2f2;border-radius:8px;padding:6px 12px;
+  font-family:ui-monospace,Consolas,monospace;font-size:14px;letter-spacing:1.5px;color:var(--brand)}
+.progress{height:8px;border-radius:99px;background:#e9edf5;overflow:hidden;margin:12px 0 4px}
+.progress > i{display:block;height:100%;background:var(--brand);border-radius:99px;transition:.3s}
+.pmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;border:1px solid}
+.chip.ok{background:var(--ok-soft);border-color:#c8ecdd;color:#0a6b4f}
+.chip.bad{background:var(--err-soft);border-color:#ffd4d4;color:var(--err)}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:10px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{background:#f8fafd;color:var(--muted);font-size:12px;font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.hi td{background:#f7f9ff}
+tfoot td{font-weight:700;background:#f8fafd;border-top:2px solid var(--line)}
+.score{font-size:16px;font-weight:700;color:var(--brand)}
+.up{color:#c92a2a}.down{color:#0ca678}
+.bar{width:130px;height:9px;border-radius:99px;background:#e9edf5;position:relative;overflow:visible}
+.bar > i{display:block;height:100%;border-radius:99px;background:var(--brand)}
+.bar > b{position:absolute;top:-3px;width:2px;height:15px;background:#f08c00;border-radius:2px}
+details{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fbfcfe;margin-top:16px}
+summary{cursor:pointer;font-size:13.5px;font-weight:600}
+details .body{font-size:13px;color:#3a4557;margin-top:12px;line-height:1.9}
+code{background:#eef1f8;border-radius:5px;padding:2px 6px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+.formula{background:#1c2536;color:#e9eefb;border-radius:9px;padding:12px 14px;margin:10px 0;
+  font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.9;overflow-x:auto}
+footer{text-align:center;color:#9aa4b5;font-size:11.5px;margin-top:26px;line-height:1.8}
+@media(max-width:600px){.wrap{padding:14px 12px 36px}.card{padding:16px}.badge{margin-left:0}}
+@media print{
+  body{background:#fff}.btn,.badge,header .sub,details,.note,footer{display:none !important}
+  .card{border:0;box-shadow:none;padding:8px 0;break-inside:avoid}
+  .wrap{max-width:100%;padding:0}
+}
+
+/* ===== mzk sunset 主题（覆盖层，不动功能代码） ===== */
+:root{--bg:#fff8f3;--card:#fff;--line:#f2e3d8;--ink:#2c211b;--muted:#8b7365;
+  --brand:#e8590c;--brand-soft:#fff0e4;--warn:#d97706;--warn-soft:#fff4e3}
+.logo{width:46px;height:46px;border-radius:14px;
+  background:linear-gradient(135deg,#ff922b,#e8590c 48%,#7048e8);
+  font-size:13px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(232,89,12,.25)}
+.btn.primary{background:linear-gradient(135deg,#f76707,#e8590c);border-color:#e8590c}
+.btn.primary:hover{background:linear-gradient(135deg,#e8590c,#d9480f)}
+.sunset-line{height:3px;border-radius:99px;
+  background:linear-gradient(90deg,#ffd43b,#ff922b,#e8590c,#7048e8,#495057);
+  margin:-10px 0 20px;opacity:.85}
+.up{color:#e8590c}.down{color:#5c7cfa}
+.formula{background:#2c211b}
+footer b{color:var(--brand)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">mzk</div>
+    <div><h1>mzk sunset互评器</h1><p class="sub">老师端 · 成绩计算、查看与导出 —— 此页面不向学生开放</p></div>
+    <span class="badge">仅老师可见</span>
+  </header>
+  <div class="sunset-line"></div>
+
+  <!-- ① 设置小组 / 生成互评码 -->
+  <div class="card">
+    <h2><span class="num">1</span> 设置小组，生成互评码</h2>
+    <div class="grid">
+      <div><label class="fld" for="gName">小组名称</label><input type="text" id="gName" value="第 1 组"></div>
+      <div><label class="fld" for="gScore">基本小组分数 G（0–100）</label><input type="number" id="gScore" value="90" min="0" max="100" step="0.5"></div>
+      <div><label class="fld" for="gN">小组人数 n（8–11）</label>
+        <select id="gN"></select></div>
+      <div><label class="fld" for="gCode">重复提交防护（可选）</label>
+        <select id="gCode"><option value="0" selected>只要一个互评码（推荐）</option><option value="1">额外启用一次性提交码，需逐人分发</option></select></div>
+      <div><label class="fld" for="gSelf">自评规则</label>
+        <select id="gSelf"><option value="1" selected>允许自评（全组 n 人都打分，含自己）</option><option value="0">自己留空，剔除自评</option></select></div>
+    </div>
+    <div style="margin-top:16px">
+      <label class="fld">小组表（可选，<b>提前录入真实姓名</b>；不录入则自动用「同学1、同学2…」占位）</label>
+      <div class="row" style="margin-bottom:8px">
+        <button class="btn sm" id="btnTogglePaste">批量粘贴名单</button>
+        <button class="btn sm" id="btnSaveRoster">保存到本机（下次自动带出）</button>
+        <button class="btn sm" id="btnClearRoster">清除，恢复占位</button>
+        <span class="roster-state warn" id="rosterState">⚠️ 当前为占位名单</span>
+      </div>
+      <div id="pasteBox" class="hidden" style="margin-bottom:10px">
+        <textarea id="pasteInput" rows="5" placeholder="一行一个姓名，可直接从 Excel 复制一列粘贴；也支持逗号、顿号、制表符分隔"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn sm primary" id="btnApplyPaste">解析并填入</button>
+          <span class="fld" id="pasteHint" style="margin:0"></span>
+        </div>
+      </div>
+      <div class="grid" id="nameGrid"></div>
+    </div>
+    <div class="note">生成后<b>只有一个互评码</b>，发给全组同学，输入同一个码即可打分。<b>默认允许自评</b>——全组 n 人（含自己）都要打分；若改选"自己留空"，系统按列有效分求平均自动剔除自评。两种规则都不记录任何打分人身份，算法与守恒规则完全不变。</div>
+    <div class="row">
+      <button class="btn primary" id="btnCreate">生成互评码</button>
+      <span style="flex:1"></span>
+      <input type="text" id="resumeRound" placeholder="已有互评码" style="width:150px">
+      <input type="text" id="resumeKey" placeholder="adminKey" style="width:210px">
+      <button class="btn" id="btnResume">载入已有互评码</button>
+    </div>
+    <div class="err" id="createErr"></div>
+  </div>
+
+  <!-- ② 当前轮次 -->
+  <div class="card hidden" id="roundCard">
+    <h2><span class="num">2</span> 当前轮次 · 收集评分</h2>
+    <div class="kv">
+      <div><div class="k">互评码（全组共用这一个）</div><div class="v" id="vRound">—</div></div>
+      <div><div class="k">小组 / 人数</div><div class="v" id="vGroup">—</div></div>
+      <div><div class="k">基本小组分数 G</div><div class="v" id="vG">—</div></div>
+      <div><div class="k">目标总分 G×n</div><div class="v" id="vTarget">—</div></div>
+    </div>
+    <div class="note ok">互评码直接发给学生即可：<code id="vUrl">—</code>　<button class="btn sm" id="btnCopyUrl">复制学生端地址</button></div>
+    <div class="note">老师端凭证 <b>adminKey</b>（换设备载入本互评码时需要，请复制保存）：<code id="vKey">—</code>　<button class="btn sm" id="btnCopyKey">复制</button></div>
+    <div id="codeBlock">
+      <label class="fld">一次性提交码（仅启用加强防重复时生成，随机分发、不绑定姓名）</label>
+      <div class="codes" id="vCodes"></div>
+      <div class="row" style="margin-top:10px"><button class="btn sm" id="btnCopyCodes">复制全部码</button></div>
+    </div>
+    <div class="progress"><i id="progBar" style="width:0%"></i></div>
+    <div class="pmeta"><span id="progText">已收集 0 / 0 份</span><span id="closedTip"></span></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="btnRefresh">刷新进度</button>
+      <button class="btn primary" id="btnResult">计算 / 刷新成绩</button>
+      <button class="btn" id="btnClose">结束本轮</button>
+    </div>
+    <div class="err" id="roundErr"></div>
+  </div>
+
+  <!-- ③ 成绩结果 -->
+  <div class="card hidden" id="resultCard">
+    <h2><span class="num">3</span> 最终得分（仅老师端）</h2>
+    <div class="chips" id="auditChips"></div>
+    <div class="note warn hidden" id="incompleteTip"></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>名次</th><th>姓名</th><th class="num">收到平均分 w</th>
+          <th class="num">最终得分</th><th class="num">较基准 G</th><th>分布（竖线 = 基准分）</th>
+        </tr></thead>
+        <tbody id="resultBody"></tbody>
+        <tfoot><tr><td colspan="3">合计 / 目标</td>
+          <td class="num" id="sumCell">—</td><td class="num" id="targetCell">—</td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn primary" id="btnCsv">导出 CSV</button>
+      <button class="btn" id="btnCopyResult">复制结果</button>
+      <button class="btn" id="btnPrint">打印</button>
+    </div>
+
+    <details>
+      <summary>算法说明与约束推导（可向老师解释用）</summary>
+      <div class="body">
+        需求只规定结果，不规定算法。由结果反推出 6 条约束：
+        <b>C1</b> 每人得分之和 = G×n；<b>C2</b> 平均分 = G；<b>C3</b> 互评无差异时每人都是 G（所以全员打 100 / 90 / 60 结果完全相同）；
+        <b>C4</b> 每人 0–100；<b>C5</b> 全体原始分同乘一个常数，结果不变；<b>C6</b> 收到评分越高，最终分越高。<br><br>
+        设 <code>w_j</code> 为第 j 人收到的平均分（只按列聚合，天然不含打分人身份），<code>w̄</code> 为全组均值，<code>d_j = w_j − w̄</code>，则 <code>Σd_j = 0</code>：
+        <div class="formula">s_j = G + k · d_j
+k = min( (100 − G) / d_max ,  G / (−d_min) )</div>
+        <b>守恒</b>：Σs = nG + k·Σd = nG，与 k 无关，恒等于 G×n。<br>
+        <b>无差异</b>：d 全 0 ⇒ s_j = G。<br>
+        <b>尺度无关</b>：w→c·w ⇒ d→c·d、k→k/c，乘积不变。<br>
+        <b>有界</b>：k 取"不越出 0–100 前提下能放大的最大值"，至少一人恰好触到 0 或 100 的边界。<br><br>
+        一句话：<b>互评不产生分数，只决定"以老师分为平均值、把 G×n 分在 0–100 之间怎么重新分配"</b>。<br><br>
+        ⚠️ 两个数学必然：<b>G 越高（如 95），上行空间 100−G 越小，区分度会被压得越狠</b>；组里出现一个极端低分会把 k 压小、拉低全组区分度。这是"守恒 + 满分 100"的后果，不是算法缺陷。<br>
+        ⚠️ 匿名：数据库只保存每列的 <code>sums[j] / cnts[j]</code> 聚合累加器，收到一行评分后原始明细立即丢弃、不入库，也不记录 IP、账号、提交顺序。因此本页只能看到聚合值与最终得分，看不到"谁给谁打了多少分"。
+      </div>
+    </details>
+  </div>
+
+  <footer><b>mzk sunset互评器</b> · 组内匿名互评 / 分数重分配　|　学生端仅提交，成绩展示与导出仅在老师端</footer>
+</div>
+
+<script>
+'use strict';
+var API = '';
+var S = { roundId:'', adminKey:'', cfg:null, result:null, codes:[] };
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function err(id,msg){ $(id).textContent = msg || ''; }
+function api(path, opt){
+  opt = opt || {};
+  var headers = { 'Content-Type':'application/json' };
+  if (S.adminKey) headers['X-Admin-Key'] = S.adminKey;
+  return fetch(API + path, { method:opt.method||'GET', headers:headers, body:opt.body })
+    .then(function(r){ return r.json().then(function(j){
+      if(!r.ok || j.ok===false) throw new Error(j.error||('HTTP '+r.status)); return j; }); });
+}
+function saveSession(){ try{ localStorage.setItem('gps_teacher', JSON.stringify({
+  roundId:S.roundId, adminKey:S.adminKey, codes:S.codes })); }catch(e){} }
+function loadSession(){
+  try{ var j = JSON.parse(localStorage.getItem('gps_teacher')||'null');
+    if (j && j.roundId && j.adminKey) { S.roundId=j.roundId; S.adminKey=j.adminKey; S.codes=j.codes||[]; return true; }
+  }catch(e){} return false;
+}
+function copy(text, tip){
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){ tip&&tip(); });
+  else { var t=document.createElement('textarea'); t.value=text; document.body.appendChild(t); t.select();
+    try{document.execCommand('copy'); tip&&tip();}catch(e){} document.body.removeChild(t); }
+}
+function n2(x){ return Number(x).toFixed(2); }
+
+/* ---- 小组表：可提前录入真实名单；未录入则「同学1、同学2…」占位 ---- */
+var ROSTER_KEY = 'gps_roster';
+function placeholderNames(n){ return Array.from({length:n},function(_,j){ return '同学'+(j+1); }); }
+function loadRoster(){
+  try{ var a = JSON.parse(localStorage.getItem(ROSTER_KEY)||'null'); return Array.isArray(a)?a:null; }
+  catch(e){ return null; }
+}
+function saveRoster(names){ try{ localStorage.setItem(ROSTER_KEY, JSON.stringify(names)); }catch(e){} }
+function currentNames(){
+  var a=[]; $('nameGrid').querySelectorAll('input').forEach(function(i){ a.push(i.value.trim()); }); return a;
+}
+function isPlaceholder(names){ return names.every(function(x,j){ return x === '同学'+(j+1); }); }
+function updateRosterState(names){
+  var el=$('rosterState'), ph=isPlaceholder(names);
+  el.className = 'roster-state ' + (ph?'warn':'ok');
+  el.textContent = ph ? '⚠️ 当前为占位名单（同学1、同学2…）' : '✅ 已录入真实名单（'+names.length+' 人）';
+}
+function setNames(names){
+  $('nameGrid').querySelectorAll('input').forEach(function(inp,j){ inp.value = names[j] || ''; });
+  updateRosterState(currentNames());
+}
+function renderNameInputs(n, useSaved){
+  var old = currentNames(), saved = useSaved ? loadRoster() : null, base;
+  if (saved && saved.length === n) base = saved.slice();
+  else if (old.length === n) base = old.slice();
+  else if (saved && saved.length) base = saved.slice();
+  else base = old.length ? old.slice() : placeholderNames(n);
+  var names = placeholderNames(n);
+  for (var j=0;j<n && j<base.length;j++) if (base[j]) names[j]=base[j];
+  $('nameGrid').innerHTML = names.map(function(name,j){
+    return '<div><label class="fld">同学 ' + (j+1) + '</label><input type="text" data-j="'+j+'" value="' +
+      esc(name) + '"></div>';
+  }).join('');
+  $('nameGrid').querySelectorAll('input').forEach(function(inp){
+    inp.oninput = function(){ updateRosterState(currentNames()); };
+  });
+  updateRosterState(names);
+}
+function parseRoster(text){
+  return String(text).split(/[\r\n,，、;；\t]+/)
+    .map(function(s){ return s.replace(/^\s*\d+[.、)．]\s*/,'').trim(); })
+    .filter(function(s){ return s.length>0; });
+}
+(function initN(){
+  var sel = $('gN');
+  for (var n=8;n<=11;n++){ var o=document.createElement('option'); o.value=n; o.textContent=n+' 人'; if(n===10) o.selected=true; sel.appendChild(o); }
+  renderNameInputs(10, true);
+  sel.onchange = function(){ renderNameInputs(Number(sel.value), false); };
+
+  $('btnTogglePaste').onclick = function(){ $('pasteBox').classList.toggle('hidden'); };
+  $('btnApplyPaste').onclick = function(){
+    var n = Number(sel.value), list = parseRoster($('pasteInput').value);
+    if (!list.length) { $('pasteHint').textContent = '未识别到姓名，请检查粘贴内容'; return; }
+    var names = placeholderNames(n);
+    for (var j=0;j<n && j<list.length;j++) names[j]=list[j];
+    setNames(names); saveRoster(names);
+    $('pasteHint').textContent = '识别到 ' + list.length + ' 个姓名，已填入前 ' + Math.min(n,list.length) + ' 个并保存到本机'
+      + (list.length > n ? '（多出的 ' + (list.length-n) + ' 个已忽略）' : list.length < n ? '（不足部分保留占位）' : '');
+  };
+  $('btnSaveRoster').onclick = function(){
+    saveRoster(currentNames()); updateRosterState(currentNames());
+    var b=this, t=b.textContent; b.textContent='已保存 ✓'; setTimeout(function(){ b.textContent=t; },1500);
+  };
+  $('btnClearRoster').onclick = function(){
+    try{ localStorage.removeItem(ROSTER_KEY); }catch(e){}
+    setNames(placeholderNames(Number(sel.value)));
+    $('pasteInput').value=''; $('pasteHint').textContent='已恢复为占位名单';
+    var b=this, t=b.textContent; b.textContent='已恢复 ✓'; setTimeout(function(){ b.textContent=t; },1500);
+  };
+})();
+
+$('btnCreate').onclick = function(){
+  err('createErr','');
+  var members = [];
+  $('nameGrid').querySelectorAll('input').forEach(function(i){ members.push(i.value.trim()); });
+  var G = Number($('gScore').value);
+  if (members.some(function(x){return !x;})) return err('createErr','组员姓名不能为空');
+  if (!isFinite(G) || G<0 || G>100) return err('createErr','老师给分需在 0–100');
+  $('btnCreate').disabled = true;
+  api('/api/round',{ method:'POST', body:JSON.stringify({
+    groupName:$('gName').value.trim()||'第 1 组', groupScore:G, members:members,
+    requireCode: $('gCode').value === '1', allowSelf: $('gSelf').value === '1'
+  })}).then(function(r){
+    S.roundId=r.roundId; S.adminKey=r.adminKey; S.codes=r.codes||[];
+    saveSession(); showRound(); refreshProgress();
+    err('createErr','');
+  }).catch(function(e){ err('createErr',e.message); }).finally(function(){ $('btnCreate').disabled=false; });
+};
+
+$('btnResume').onclick = function(){
+  err('createErr','');
+  var id=$('resumeRound').value.trim().toUpperCase(), key=$('resumeKey').value.trim();
+  if(!id||!key) return err('createErr','请填写轮次号与 adminKey');
+  S.roundId=id; S.adminKey=key; S.codes=[]; saveSession();
+  showRound(); refreshProgress();
+  api('/api/round/' + encodeURIComponent(id) + '/codes').then(function(c){
+    S.codes = c.codes || []; saveSession(); showRound();
+  }).catch(function(e){ err('createErr','轮次已载入，但提交码恢复失败：'+e.message); });
+};
+
+function showRound(){
+  $('roundCard').classList.remove('hidden');
+  $('vRound').textContent = S.roundId;
+  $('vKey').textContent = S.adminKey;
+  $('vUrl').textContent = location.origin + '/?round=' + S.roundId;
+  $('codeBlock').classList.toggle('hidden', S.codes.length===0);
+  $('vCodes').innerHTML = S.codes.map(function(c){ return '<span class="code">'+esc(c)+'</span>'; }).join('');
+}
+var lastAuto = -1;
+function refreshProgress(){
+  if (!S.roundId) return;
+  err('roundErr','');
+  api('/api/round/' + encodeURIComponent(S.roundId) + '/config').then(function(c){
+    S.cfg=c;
+    $('vGroup').textContent = c.groupName + ' / ' + c.n + ' 人';
+    $('vG').textContent = c.groupScore;
+    $('vTarget').textContent = c.groupScore * c.n;
+    $('progBar').style.width = Math.min(100, c.submitted/c.n*100) + '%';
+    $('progText').textContent = '已收集 ' + c.submitted + ' / ' + c.n + ' 份';
+    $('closedTip').textContent = c.closed ? '本轮已结束' : '收集中';
+    // 学生全部提交完，自动出成绩，不需要老师手动点「计算」
+    if (c.submitted >= c.n && c.submitted !== lastAuto) { lastAuto = c.submitted; getResult(); }
+    return c;
+  }).catch(function(e){ err('roundErr',e.message); });
+}
+
+function getResult(){
+  err('roundErr','');
+  api('/api/round/' + encodeURIComponent(S.roundId) + '/result').then(function(r){
+    S.result=r; lastAuto = r.submitted; renderResult(); refreshProgress();
+  }).catch(function(e){ err('roundErr',e.message); });
+}
+
+function renderResult(){
+  var r=S.result;
+  $('resultCard').classList.remove('hidden');
+  $('vG').textContent = r.groupScore;
+  $('vTarget').textContent = r.audit.targetSum;
+  $('incompleteTip').classList.toggle('hidden', r.complete);
+  if(!r.complete) $('incompleteTip').textContent =
+    '⚠️ 当前仅收到 ' + r.submitted + ' / ' + r.n + ' 份评分，以下为临时结果；收齐后请再次点击「计算 / 刷新成绩」。';
+
+  var a=r.audit;
+  $('auditChips').innerHTML = [
+    ['合计 ' + n2(a.sum) + ' = 目标 ' + n2(a.targetSum), a.conserved],
+    ['平均 ' + n2(a.average) + ' = G ' + n2(r.groupScore), a.meanOk],
+    ['区间 ' + n2(a.min) + ' ~ ' + n2(a.max) + '（0–100）', a.inRange],
+    ['进度 ' + r.submitted + ' / ' + r.n + ' 份', r.complete]
+  ].map(function(x){ return '<span class="chip '+(x[1]?'ok':'bad')+'">'+(x[1]?'✅ ':'❌ ')+x[0]+'</span>'; }).join('');
+
+  var order = r.scores.map(function(s,i){ return {i:i,s:s}; }).sort(function(a,b){ return b.s-a.s; });
+  var rank = {}; order.forEach(function(o,k){ rank[o.i]=k+1; });
+  $('resultBody').innerHTML = r.members.map(function(name,j){
+    var s=r.scores[j], diff=s-r.groupScore;
+    var cls = rank[j]<=3 ? ' class="hi"' : '';
+    return '<tr'+cls+'><td>'+rank[j]+'</td><td>'+esc(name)+'</td>' +
+      '<td class="num">'+n2(r.weights[j])+'</td>' +
+      '<td class="num"><span class="score">'+r.displayed[j]+'</span></td>' +
+      '<td class="num '+(diff>=0?'up':'down')+'">'+(diff>=0?'+':'')+n2(diff)+'</td>' +
+      '<td><div class="bar"><i style="width:'+Math.max(0,Math.min(100,s))+'%"></i>' +
+      '<b style="left:'+r.groupScore+'%"></b></div></td></tr>';
+  }).join('');
+  var shownSum = r.displayed.reduce(function(a,b){ return a + Number(b); },0);
+  $('sumCell').textContent = n2(shownSum);
+  $('targetCell').textContent = n2(a.targetSum) + ' ✅';
+}
+
+$('btnRefresh').onclick = refreshProgress;
+$('btnResult').onclick = getResult;
+$('btnClose').onclick = function(){
+  api('/api/round/'+encodeURIComponent(S.roundId)+'/close',{method:'POST',body:'{}'}).then(function(){
+    refreshProgress(); getResult();
+  }).catch(function(e){ err('roundErr',e.message); });
+};
+$('btnCopyUrl').onclick = function(){ copy(location.origin+'/?round='+S.roundId, function(){ $('btnCopyUrl').textContent='已复制'; }); };
+$('btnCopyKey').onclick = function(){ copy(S.adminKey, function(){ $('btnCopyKey').textContent='已复制'; }); };
+$('btnCopyCodes').onclick = function(){ copy(S.codes.join('\n'), function(){ $('btnCopyCodes').textContent='已复制'; }); };
+
+function csvText(){
+  var r=S.result;
+  var lines=['\ufeff姓名,收到平均分,最终得分,较基准分'];
+  r.members.forEach(function(name,j){
+    lines.push([ '"'+String(name).replace(/"/g,'""')+'"', n2(r.weights[j]),
+      r.displayed[j], (r.scores[j]-r.groupScore>=0?'+':'')+n2(r.scores[j]-r.groupScore) ].join(','));
+  });
+  lines.push(',合计,'+n2(r.audit.sum)+',目标 '+n2(r.audit.targetSum));
+  lines.push(',老师给分 G,'+r.groupScore+',人数 '+r.n);
+  return lines.join('\r\n');
+}
+$('btnCsv').onclick = function(){
+  if(!S.result) return;
+  var blob=new Blob([csvText()],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='组内互评成绩_'+S.result.roundId+'.csv'; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+};
+$('btnCopyResult').onclick = function(){
+  if(!S.result) return;
+  var r=S.result, lines=['小组：'+r.groupName+'　老师给分：'+r.groupScore+'　人数：'+r.n];
+  r.members.forEach(function(name,j){ lines.push(name+'：'+r.displayed[j]+' 分'); });
+  lines.push('合计：'+n2(r.audit.sum)+' 分（目标 '+n2(r.audit.targetSum)+'）');
+  copy(lines.join('\n'), function(){ $('btnCopyResult').textContent='已复制'; });
+};
+$('btnPrint').onclick = function(){ window.print(); };
+
+if (loadSession()) { showRound(); refreshProgress(); }
+// 每 5 秒自动刷新进度；学生全部提交后自动算出成绩
+setInterval(refreshProgress, 5000);
+</script>
+</body>
+</html>

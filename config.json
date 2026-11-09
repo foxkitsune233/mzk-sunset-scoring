@@ -1,0 +1,7 @@
+{
+  "mongoUri": "mongodb://127.0.0.1:27017",
+  "dbName": "group_score",
+  "host": "0.0.0.0",
+  "port": 8090,
+  "note": "若 MongoDB 开了认证，把 mongoUri 改成 mongodb://user:password@127.0.0.1:27017/?authSource=admin"
+}

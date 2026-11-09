@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>mzk sunset互评器 · 匿名提交</title>
+<style>
+:root{
+  --bg:#f4f6fb; --card:#fff; --line:#e4e9f2; --ink:#1c2536; --muted:#6b7689;
+  --brand:#3b5bdb; --brand-soft:#edf1ff; --ok:#0ca678; --ok-soft:#e6f7f1;
+  --warn:#e8590c; --warn-soft:#fff3e6; --err:#e03131;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;align-items:center;gap:12px;margin:8px 0 22px}
+.logo{width:42px;height:42px;border-radius:12px;background:var(--brand);color:#fff;
+  display:grid;place-items:center;font-size:20px;font-weight:700;flex:none}
+h1{font-size:19px;margin:0;letter-spacing:.3px}
+.sub{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(28,37,54,.035)}
+.card h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.card h2 .num{width:22px;height:22px;border-radius:7px;background:var(--brand-soft);
+  color:var(--brand);font-size:12px;display:grid;place-items:center;font-weight:700;flex:none}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+label.fld{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+input[type=text],input[type=number],input[type=url]{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;
+  background:#fbfcfe;color:var(--ink);font-size:15px;font-family:inherit;outline:none}
+input:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
+input[type=number]{-moz-appearance:textfield}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 18px;
+  border-radius:9px;font-size:14px;font-family:inherit;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.btn.primary:hover{background:#324bc0;color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sm{padding:6px 12px;font-size:12.5px}
+.note{background:var(--brand-soft);border:1px solid #dbe3ff;border-radius:10px;
+  padding:12px 14px;font-size:12.8px;color:#364380;margin-bottom:16px}
+.note b{color:var(--brand)}
+.note.ok{background:var(--ok-soft);border-color:#c8ecdd;color:#0a6b4f}
+.note.warn{background:var(--warn-soft);border-color:#ffdcb8;color:#9a4208}
+.members{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.mem{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fbfcfe}
+.mem .top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.avatar{width:24px;height:24px;border-radius:7px;background:#e9edfa;color:var(--brand);
+  font-size:12px;display:grid;place-items:center;font-weight:700;flex:none}
+.mem .name{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mem input{padding:7px 9px;font-size:14px;text-align:center}
+.mem input::placeholder{font-size:11.5px;color:#a8b1c1}
+.progress{height:8px;border-radius:99px;background:#e9edf5;overflow:hidden;margin:10px 0 4px}
+.progress > i{display:block;height:100%;background:var(--brand);border-radius:99px;transition:.3s}
+.pmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.hidden{display:none !important}
+.center{text-align:center;padding:26px 10px}
+.bigcheck{width:60px;height:60px;border-radius:50%;background:var(--ok-soft);color:var(--ok);
+  font-size:32px;display:grid;place-items:center;margin:0 auto 14px}
+.center h3{margin:0 0 6px;font-size:18px}
+.center p{color:var(--muted);font-size:13px;margin:0 0 18px}
+footer{text-align:center;color:#9aa4b5;font-size:11.5px;margin-top:26px;line-height:1.8}
+.err{color:var(--err);font-size:12.5px;min-height:18px;margin-top:8px}
+@media(max-width:480px){.wrap{padding:14px 12px 36px}.card{padding:16px}.members{grid-template-columns:repeat(2,1fr)}}
+
+/* ===== mzk sunset 主题（覆盖层，不动功能代码） ===== */
+:root{--bg:#fff8f3;--card:#fff;--line:#f2e3d8;--ink:#2c211b;--muted:#8b7365;
+  --brand:#e8590c;--brand-soft:#fff0e4;--warn:#d97706;--warn-soft:#fff4e3}
+.logo{width:46px;height:46px;border-radius:14px;
+  background:linear-gradient(135deg,#ff922b,#e8590c 48%,#7048e8);
+  font-size:13px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(232,89,12,.25)}
+.btn.primary{background:linear-gradient(135deg,#f76707,#e8590c);border-color:#e8590c}
+.btn.primary:hover{background:linear-gradient(135deg,#e8590c,#d9480f)}
+.sunset-line{height:3px;border-radius:99px;
+  background:linear-gradient(90deg,#ffd43b,#ff922b,#e8590c,#7048e8,#495057);
+  margin:-10px 0 20px;opacity:.85}
+footer b{color:var(--brand)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">mzk</div>
+    <div><h1>mzk sunset互评器</h1><p class="sub">匿名互评 · 每人给全组同学打分，满分 100 分</p></div>
+  </header>
+  <div class="sunset-line"></div>
+
+  <!-- 输入互评码 -->
+  <div class="card" id="entryCard">
+    <h2><span class="num">1</span> 输入互评码</h2>
+    <label class="fld" for="roundInput">老师给出的互评码（全组共用这一个）</label>
+    <div class="row">
+      <input type="text" id="roundInput" placeholder="例如 R7K2M9" style="flex:1;min-width:180px;text-transform:uppercase">
+      <button class="btn primary" id="btnLoad">开始打分</button>
+    </div>
+    <div class="err" id="entryErr"></div>
+  </div>
+
+  <!-- 打分区 -->
+  <div id="mainArea" class="hidden">
+    <div class="card">
+      <h2><span class="num">2</span> <span id="groupTitle">小组</span></h2>
+      <div class="progress"><i id="progBar" style="width:0%"></i></div>
+      <div class="pmeta"><span id="progText">已收集 0 / 0 份</span><span id="roundTag"></span></div>
+    </div>
+
+    <div class="note" id="ruleNote">
+      <b>匿名说明</b>：系统不记录你是谁，也不记录这份评分对应的身份。<br>
+      <span id="ruleLine">· 全组每人都要打分（0–100）。</span><br>
+      · 提交后本页<b>不会显示任何分数、排名或成绩</b>，成绩由老师在另一个页面统一查看。
+    </div>
+
+    <div class="card" id="formCard">
+      <h2><span class="num">3</span> 给全组同学打分</h2>
+      <div class="members" id="memberGrid"></div>
+
+      <div id="codeWrap" style="margin-top:18px">
+        <label class="fld" for="codeInput">匿名提交码（老师发放，一次性使用）</label>
+        <input type="text" id="codeInput" placeholder="6 位数字" inputmode="numeric" maxlength="6" style="max-width:220px">
+      </div>
+
+      <div class="err" id="formErr"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" id="btnSubmit">匿名提交</button>
+        <button class="btn sm" id="btnClear">清空重填</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="doneCard">
+      <div class="center">
+        <div class="bigcheck">✓</div>
+        <h3>已匿名提交</h3>
+        <p id="doneText">本轮进度 1 / 10 份</p>
+        <div class="note ok" style="text-align:left">
+          你的评分已计入汇总，原始明细已丢弃。本页不提供成绩查询，请等待老师在老师端公布。
+        </div>
+        <button class="btn sm" id="btnAnother">本机换一位同学继续填写</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <b>mzk sunset互评器</b> · 组内匿名互评 / 分数重分配<br>
+    学生端仅用于提交，成绩展示与导出在独立的老师端页面
+  </footer>
+</div>
+
+<script>
+'use strict';
+var API = '';   // 同源部署；若前后端分离，改成后端地址如 http://8.145.44.20:8090
+var state = { roundId:'', cfg:null, members:[], n:0 };
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function showErr(id,msg){ $(id).textContent = msg || ''; }
+function api(path, opt){
+  return fetch(API + path, Object.assign({ headers:{'Content-Type':'application/json'} }, opt||{}))
+    .then(function(r){ return r.json().then(function(j){ if(!r.ok || j.ok===false) throw new Error(j.error||('HTTP '+r.status)); return j; }); });
+}
+function submittedKey(){ return 'gps_submitted_' + state.roundId; }
+
+function loadRound(id){
+  showErr('entryErr','');
+  api('/api/round/' + encodeURIComponent(id) + '/config').then(function(cfg){
+    state.roundId = cfg.roundId; state.cfg = cfg; state.n = cfg.n; state.members = cfg.members;
+    $('entryCard').classList.add('hidden');
+    $('mainArea').classList.remove('hidden');
+    $('groupTitle').textContent = cfg.groupName || '小组';
+    $('roundTag').textContent = '互评码 ' + cfg.roundId;
+    $('codeWrap').classList.toggle('hidden', !cfg.requireCode);
+    state.allowSelf = cfg.allowSelf !== false;
+    $('ruleLine').innerHTML = state.allowSelf
+      ? '· <b>全组 ' + cfg.n + ' 位同学都要打分，包括自己</b>（0–100），共 ' + cfg.n + ' 项。'
+      : '· 找到<b>自己的名字</b>，那一格<b>留空不填</b>，其余 ' + (cfg.n-1) + ' 位同学都要打分（0–100）。';
+    renderMembers(); renderProgress(cfg.submitted, cfg.n);
+    history.replaceState(null,'','?round=' + encodeURIComponent(cfg.roundId));
+    if (localStorage.getItem(submittedKey())) showDone(cfg.submitted, cfg.n, true);
+    else { $('formCard').classList.remove('hidden'); $('doneCard').classList.add('hidden'); }
+  }).catch(function(e){ showErr('entryErr', e.message); });
+}
+
+function renderProgress(submitted, n){
+  $('progBar').style.width = (n ? Math.min(100, submitted/n*100) : 0) + '%';
+  $('progText').textContent = '已收集 ' + submitted + ' / ' + n + ' 份';
+}
+function renderMembers(){
+  $('memberGrid').innerHTML = state.members.map(function(name, j){
+    return '<div class="mem"><div class="top"><span class="avatar">' + (j+1) + '</span>' +
+      '<span class="name" title="' + esc(name) + '">' + esc(name) + '</span></div>' +
+      '<input type="number" min="0" max="100" step="1" data-j="' + j + '" placeholder="' + (state.allowSelf ? '0–100' : '留空=本人') + '"></div>';
+  }).join('');
+}
+function collect(){
+  var out = [];
+  $('memberGrid').querySelectorAll('input').forEach(function(inp){
+    var raw = inp.value.trim();
+    var j = Number(inp.dataset.j);
+    if (raw === '') { out[j] = null; return; }
+    var v = Number(raw);
+    if (!isFinite(v) || v < 0 || v > 100) { out[j] = NaN; return; }
+    out[j] = v;
+  });
+  return out;
+}
+function showDone(submitted, n, already){
+  $('formCard').classList.add('hidden');
+  $('doneCard').classList.remove('hidden');
+  $('doneText').textContent = (already ? '本机已提交过一份。' : '') + '本轮进度 ' + submitted + ' / ' + n + ' 份';
+  renderProgress(submitted, n);
+}
+
+$('btnLoad').onclick = function(){
+  var id = $('roundInput').value.trim().toUpperCase();
+  if (!id) return showErr('entryErr','请填写轮次号');
+  loadRound(id);
+};
+$('roundInput').onkeydown = function(e){ if(e.key==='Enter') $('btnLoad').click(); };
+
+$('btnClear').onclick = function(){
+  $('memberGrid').querySelectorAll('input').forEach(function(i){ i.value=''; });
+  $('codeInput').value = ''; showErr('formErr','');
+};
+
+$('btnSubmit').onclick = function(){
+  showErr('formErr','');
+  var scores = collect();
+  if (scores.some(function(v){ return Number.isNaN(v); }))
+    return showErr('formErr','分数需为 0–100 之间的数字，或留空');
+  var valid = scores.filter(function(v){ return v !== null; }).length;
+  if (state.allowSelf && valid !== state.n)
+    return showErr('formErr','请给全组 ' + state.n + ' 位同学都打分（含本人），不能有空格');
+  if (!state.allowSelf && valid < state.n - 1)
+    return showErr('formErr','请给其余 ' + (state.n-1) + ' 位同学打分（本人那一格留空）');
+  var code = $('codeInput').value.trim();
+  if (state.cfg.requireCode && !code) return showErr('formErr','请填写匿名提交码');
+
+  $('btnSubmit').disabled = true;
+  api('/api/submit', { method:'POST', body: JSON.stringify({
+    roundId: state.roundId, code: code, scores: scores
+  })}).then(function(r){
+    localStorage.setItem(submittedKey(),'1');
+    $('btnClear').click();
+    showDone(r.submitted, r.n, false);
+  }).catch(function(e){
+    showErr('formErr', e.message);
+    $('btnSubmit').disabled = false;
+  });
+};
+
+$('btnAnother').onclick = function(){
+  localStorage.removeItem(submittedKey());
+  $('doneCard').classList.add('hidden');
+  $('formCard').classList.remove('hidden');
+  $('btnSubmit').disabled = false;
+  api('/api/round/' + encodeURIComponent(state.roundId) + '/config').then(function(c){ renderProgress(c.submitted, c.n); });
+};
+
+// 自动进入 URL 中的轮次
+var m = location.search.match(/[?&]round=([^&]+)/);
+if (m) { $('roundInput').value = decodeURIComponent(m[1]); loadRound(decodeURIComponent(m[1]).toUpperCase()); }
+</script>
+</body>
+</html>
