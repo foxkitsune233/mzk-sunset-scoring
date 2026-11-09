@@ -273,6 +273,7 @@ footer b{color:#38697a;font-weight:600}
     <div class="logo">mzk</div>
     <div><span class="eyebrow">TEACHER WORKSPACE</span><h1>mzk sunset互评器</h1><p class="sub">老师端 · 成绩计算、查看与导出 —— 此页面不向学生开放</p></div>
     <span class="badge">仅老师可见</span>
+    <button class="btn sm" id="btnLogout" style="margin-left:10px">退出登录</button>
   </header>
   <div class="sunset-line"></div>
 
@@ -401,7 +402,7 @@ function api(path, opt){
   opt = opt || {};
   var headers = { 'Content-Type':'application/json' };
   if (S.adminKey) headers['X-Admin-Key'] = S.adminKey;
-  return fetch(API + path, { method:opt.method||'GET', headers:headers, body:opt.body })
+  return fetch(API + path, { method:opt.method||'GET', headers:headers, body:opt.body, credentials:'same-origin' })
     .then(function(r){ return r.json().then(function(j){
       if(!r.ok || j.ok===false) throw new Error(j.error||('HTTP '+r.status)); return j; }); });
 }
@@ -623,6 +624,12 @@ $('btnCopyResult').onclick = function(){
   copy(lines.join('\n'), function(){ $('btnCopyResult').textContent='已复制'; });
 };
 $('btnPrint').onclick = function(){ window.print(); };
+
+$('btnLogout').onclick = function(){
+  fetch('/api/teacher/logout', { method:'POST', credentials:'same-origin' })
+    .then(function(){ location.href = '/teacher'; })
+    .catch(function(){ location.href = '/teacher'; });
+};
 
 if (loadSession()) { showRound(); refreshProgress(); }
 // 每 5 秒自动刷新进度；学生全部提交后自动算出成绩

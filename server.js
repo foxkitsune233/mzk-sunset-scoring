@@ -35,6 +35,43 @@ function randStr(len, alphabet) {
 const ROUND_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_CHARS = '0123456789';
 
+/* ---------------- 老师端登录密码（随机生成、持久化、重启不变） ---------------- */
+const TEACHER_PASS_FILE = path.join(__dirname, 'teacher-pass.json');
+function loadTeacherPass() {
+  try {
+    const j = JSON.parse(fs.readFileSync(TEACHER_PASS_FILE, 'utf8'));
+    if (j && j.password) return j.password;
+  } catch (e) {}
+  // 12 位随机密码（去掉易混淆字符），写入文件并限制仅属主可读
+  const pwd = crypto.randomBytes(9).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 14);
+  try {
+    fs.writeFileSync(TEACHER_PASS_FILE, JSON.stringify({ password: pwd, createdAt: new Date().toISOString() }), { mode: 0o600 });
+    console.log('[TEACHER] 老师端随机密码已生成并保存到 teacher-pass.json：' + pwd);
+  } catch (e) { console.error('[WARN] 无法写入 teacher-pass.json：' + e.message); }
+  return pwd;
+}
+const TEACHER_PASS = loadTeacherPass();
+// 登录会话：token -> 过期时间戳（内存态，重启清空但密码持久）
+const teacherSessions = new Map();
+function newTeacherToken() {
+  const t = crypto.randomBytes(24).toString('hex');
+  teacherSessions.set(t, Date.now() + 8 * 3600 * 1000);
+  return t;
+}
+function validTeacherToken(t) {
+  if (!t) return false;
+  const exp = teacherSessions.get(t);
+  if (!exp) return false;
+  if (Date.now() > exp) { teacherSessions.delete(t); return false; }
+  return true;
+}
+function getCookie(req, name) {
+  const c = req.headers.cookie;
+  if (!c) return '';
+  const m = c.split(';').map(s => s.trim()).find(s => s.startsWith(name + '='));
+  return m ? decodeURIComponent(m.slice(name.length + 1)) : '';
+}
+
 function json(res, code, obj) {
   const body = JSON.stringify(obj);
   res.writeHead(code, {
@@ -92,6 +129,54 @@ function serveStatic(res, rel) {
     res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=86400' });
     res.end(buf);
   });
+}
+
+/* ---------------- 老师端：登录 / 登出 / 登录页 ---------------- */
+function serveTeacherLogin(res) {
+  const html = `<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>老师端登录 · mzk 互评器</title><style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(160deg,#0b1d28,#0b2530 60%,#0a2b39);color:#e8f4f7}
+.login{width:min(360px,90vw);padding:30px 26px;border:1px solid rgba(255,255,255,.14);background:rgba(13,37,49,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 20px 60px rgba(0,10,20,.4)}
+.login h1{font-size:18px;margin:0 0 4px;font-weight:600;letter-spacing:.02em}
+.login .sub{margin:0 0 22px;color:#8fb6c2;font-size:12.5px}
+.login label{display:block;font-size:12px;color:#9fc1cc;margin-bottom:7px;letter-spacing:.03em}
+.login input{width:100%;min-height:44px;padding:11px 13px;background:rgba(2,16,26,.55);border:1px solid rgba(120,180,196,.3);color:#eef9fb;font-size:15px;outline:none;transition:.15s}
+.login input:focus{border-color:#5fb9c9;box-shadow:inset 3px 0 0 #5fb9c9}
+.login .btn{width:100%;margin-top:16px;min-height:44px;border:1px solid #0b7b93;background:#0b7b93;color:#f2fdff;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.login .btn:hover{background:#046176}
+.login .err{color:#f1a3aa;font-size:12.5px;min-height:18px;margin-top:10px}
+.login .foot{margin-top:18px;font-size:11px;color:#6f95a1;text-align:center}
+</style></head><body><div class="login"><h1>mzk sunset互评器</h1><p class="sub">老师端 · 需要密码登录</p><form id="f"><label for="pw">老师端密码</label><input type="password" id="pw" autocomplete="current-password" placeholder="请输入密码"><button class="btn" type="submit" id="b">登录</button><div class="err" id="e"></div></form><div class="foot">此页面仅老师使用，学生请勿访问</div></div><script>
+document.getElementById('f').onsubmit=function(e){
+ e.preventDefault(); var b=document.getElementById('b'); document.getElementById('e').textContent='';
+ b.disabled=true; b.textContent='登录中…';
+ fetch('/api/teacher/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('pw').value})})
+ .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+ .then(function(x){ if(x.ok&&x.j.ok){ location.href='/teacher'; } else { document.getElementById('e').textContent=(x.j&&x.j.error)||'登录失败'; b.disabled=false; b.textContent='登录'; } })
+ .catch(function(){ document.getElementById('e').textContent='网络错误'; b.disabled=false; b.textContent='登录'; });
+};
+</script></body></html>`;
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.end(html);
+}
+async function teacherLogin(req, res) {
+  const b = await readBody(req);
+  if (String(b.password) === TEACHER_PASS) {
+    const token = newTeacherToken();
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Set-Cookie': 'mzk_t=' + token + '; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800'
+    });
+    res.end(JSON.stringify({ ok: true }));
+  } else {
+    fail(res, 401, '密码错误');
+  }
+}
+function teacherLogout(res) {
+  res.writeHead(200, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Set-Cookie': 'mzk_t=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+  });
+  res.end(JSON.stringify({ ok: true }));
 }
 
 /* ---------------- 老师端：创建轮次 ---------------- */
@@ -253,8 +338,16 @@ async function handle(req, res) {
     const url = new URL(req.url, 'http://localhost');
     const p = url.pathname;
     if (req.method === 'GET' && (p === '/' || p === '/index.html')) return serveHtml(res, 'index.html');
-    if (req.method === 'GET' && (p === '/teacher' || p === '/teacher.html')) return serveHtml(res, 'teacher.html');
-    if (req.method === 'POST' && p === '/api/round') return await createRound(req, res);
+    if (req.method === 'GET' && (p === '/teacher' || p === '/teacher.html')) {
+      if (!validTeacherToken(getCookie(req, 'mzk_t'))) return serveTeacherLogin(res);
+      return serveHtml(res, 'teacher.html');
+    }
+    if (req.method === 'POST' && p === '/api/teacher/login') return await teacherLogin(req, res);
+    if (req.method === 'POST' && p === '/api/teacher/logout') return teacherLogout(res);
+    if (req.method === 'POST' && p === '/api/round') {
+      if (!validTeacherToken(getCookie(req, 'mzk_t'))) return fail(res, 401, '请先在老师端登录');
+      return await createRound(req, res);
+    }
     if (req.method === 'POST' && p === '/api/submit') return await submit(req, res);
     let m;
     if (req.method === 'GET' && (m = p.match(/^\/api\/round\/([^/]+)\/config$/))) return await getConfig(res, decodeURIComponent(m[1]));
