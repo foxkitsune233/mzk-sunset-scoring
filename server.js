@@ -72,6 +72,28 @@ function serveHtml(res, file) {
   });
 }
 
+/* 静态资源（背景图、图标等）：仅放行白名单后缀，并防目录穿越 */
+const STATIC_MIME = {
+  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+  '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
+  '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8',
+  '.woff2': 'font/woff2', '.woff': 'font/woff', '.webp': 'image/webp'
+};
+function serveStatic(res, rel) {
+  const ext = path.extname(rel).toLowerCase();
+  const mime = STATIC_MIME[ext];
+  if (!mime) return fail(res, 404, '资源不存在');
+  const p = path.join(__dirname, rel);
+  if (p !== path.normalize(p) || !p.startsWith(path.join(__dirname, path.sep))) {
+    return fail(res, 403, '非法路径');
+  }
+  fs.readFile(p, (err, buf) => {
+    if (err) return fail(res, 404, '资源不存在');
+    res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=86400' });
+    res.end(buf);
+  });
+}
+
 /* ---------------- 老师端：创建轮次 ---------------- */
 async function createRound(req, res) {
   const b = await readBody(req);
@@ -244,6 +266,7 @@ async function handle(req, res) {
     if (req.method === 'GET' && (m = p.match(/^\/api\/round\/([^/]+)\/codes$/))) return await getCodes(req, res, decodeURIComponent(m[1]));
     if (req.method === 'POST' && (m = p.match(/^\/api\/round\/([^/]+)\/close$/))) return await closeRound(req, res, decodeURIComponent(m[1]));
     if (p === '/health') return json(res, 200, { ok: true, mongo: !!db });
+    if (req.method === 'GET' && /^\/[A-Za-z0-9._-]+\.[A-Za-z0-9]+$/.test(p)) return serveStatic(res, p);
     return fail(res, 404, '接口不存在');
   } catch (e) {
     console.error('[ERR]', e);
