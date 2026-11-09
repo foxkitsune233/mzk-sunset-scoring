@@ -78,8 +78,90 @@ footer{text-align:center;color:#9aa4b5;font-size:11.5px;margin-top:26px;line-hei
   margin:-10px 0 20px;opacity:.85}
 footer b{color:var(--brand)}
 </style>
-</head>
-<body>
+<style>body{background:#061321}.wallpaper{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:#071321}.wallpaper-image{position:absolute;inset:-3%;background:url("wallpaper.jpg") center 40% / cover no-repeat;animation:wall-drift 18s ease-in-out infinite alternate}.wallpaper-shade{position:absolute;inset:0;background:rgba(3,13,29,.25)}.wallpaper-stars{position:absolute;inset:0;width:100%;height:100%}.wrap{position:relative}.card{background:rgba(255,255,255,.94)}header{color:#fff;text-shadow:0 1px 6px #102f49}header .sub{color:#f4faff}footer{color:#fff;text-shadow:0 1px 4px #102f49}@media (min-width: 768px) and (orientation: landscape){.wallpaper-image{background-position:center 22%}}@keyframes wall-drift{from{transform:scale(1) translateY(0)}to{transform:scale(1.07) translateY(-1%)}}@media(prefers-reduced-motion:reduce){.wallpaper-image{animation:none}.wallpaper-stars{display:none}}</style>
+<style>
+/* ===== Glass / Flat：磨砂留给卡片，控件保持扁平清晰 ===== */
+:root{
+  --glass:rgba(255,250,247,.82);
+  --glass-strong:rgba(255,253,250,.92);
+  --glass-line:rgba(255,255,255,.58);
+  --flat-shadow:0 12px 32px rgba(4,15,29,.14);
+}
+body{min-height:100vh}
+.wallpaper-shade{
+  background:linear-gradient(145deg,rgba(3,13,29,.46),rgba(35,20,36,.28) 58%,rgba(112,72,48,.24));
+}
+.card{
+  background:var(--glass);
+  border:1px solid var(--glass-line);
+  border-radius:18px;
+  box-shadow:var(--flat-shadow);
+  -webkit-backdrop-filter:blur(20px) saturate(135%);
+  backdrop-filter:blur(20px) saturate(135%);
+}
+.card h2{letter-spacing:.01em}
+.card h2 .num{background:#ffe7d6;color:#c2410c;border-radius:6px}
+.sunset-line{height:2px;opacity:.9;box-shadow:0 1px 8px rgba(255,146,43,.18)}
+.logo{border:1px solid rgba(255,255,255,.38);box-shadow:0 8px 24px rgba(12,17,29,.2)}
+.btn{
+  border-color:rgba(219,190,174,.72);
+  background:rgba(255,253,250,.78);
+  color:#49362c;
+  border-radius:10px;
+  box-shadow:none;
+  transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .16s ease;
+}
+.btn.primary,.btn.primary:hover{
+  background:#e8590c;
+  border-color:#e8590c;
+  color:#fff;
+}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:3px solid rgba(255,146,43,.38);outline-offset:2px}
+input[type=text],input[type=number],input[type=url]{
+  background:rgba(255,253,250,.72);
+  border-color:#e6d5ca;
+  border-radius:10px;
+  box-shadow:none;
+}
+input:focus{background:#fffdfa;border-color:#e8590c;box-shadow:0 0 0 3px rgba(232,89,12,.13)}
+.mem{
+  background:rgba(255,253,250,.56);
+  border-color:#eadbd1;
+  border-radius:12px;
+  box-shadow:none;
+}
+.avatar{background:#ffeadb;color:#c2410c;border-radius:6px}
+.note{
+  background:rgba(255,240,228,.86);
+  border-color:rgba(255,220,190,.76);
+  color:#714126;
+  border-radius:12px;
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+}
+.note.ok{background:rgba(230,247,241,.9);border-color:rgba(200,236,221,.9);color:#0a6b4f}
+.note.warn{background:rgba(255,244,227,.9);border-color:rgba(255,220,184,.9);color:#9a4208}
+.progress{height:6px;background:rgba(119,88,67,.14)}
+.progress > i{background:#e8590c}
+.bigcheck{border-radius:18px;background:rgba(230,247,241,.88)}
+@media(hover:hover){
+  .btn:hover{background:#fff7f1;border-color:#e8590c;color:#c2410c}
+  .btn.primary:hover{background:#d9480f;color:#fff}
+  .mem:hover{background:rgba(255,253,250,.78);border-color:#dec4b4}
+}
+@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .card{background:var(--glass-strong)}
+}
+@media(max-width:480px){
+  .card{border-radius:16px;box-shadow:0 8px 24px rgba(4,15,29,.12)}
+  .members{gap:8px}
+}
+@media(prefers-reduced-transparency:reduce){
+  .card,.note{background:#fffaf6;-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+</style></head>
+<body><div class="wallpaper" aria-hidden="true"><div class="wallpaper-image"></div><div class="wallpaper-shade"></div><canvas class="wallpaper-stars"></canvas></div><script>(()=>{const c=document.querySelector(".wallpaper-stars"),x=c.getContext("2d");if(!x||matchMedia("(prefers-reduced-motion: reduce)").matches)return;let w,h,a;function size(){let d=Math.min(devicePixelRatio||1,2);w=innerWidth;h=innerHeight;c.width=w*d;c.height=h*d;x.setTransform(d,0,0,d,0,0);a=Array.from({length:55},()=>({x:Math.random()*w,y:Math.random()*h,r:1+Math.random()*2,s:10+Math.random()*24,p:Math.random()*6.28}))}addEventListener("resize",size);size();function draw(t){x.clearRect(0,0,w,h);for(const v of a){x.globalAlpha=.35+.6*(.5+.5*Math.sin(t*.003+v.p));x.fillStyle="#b7f8ff";x.shadowColor="#58e9ff";x.shadowBlur=12;x.beginPath();x.arc(v.x,(v.y-t*.001*v.s%h+h)%h,v.r,0,Math.PI*2);x.fill()}x.globalAlpha=1;requestAnimationFrame(draw)}requestAnimationFrame(draw)})();</script>
 <div class="wrap">
   <header>
     <div class="logo">mzk</div>

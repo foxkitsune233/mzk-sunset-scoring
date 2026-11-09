@@ -105,6 +105,100 @@ footer{text-align:center;color:#9aa4b5;font-size:11.5px;margin-top:26px;line-hei
 .formula{background:#2c211b}
 footer b{color:var(--brand)}
 </style>
+<style>
+/* ===== Glass / Flat：暖色玻璃卡片 + 扁平工作控件 ===== */
+:root{
+  --glass:rgba(255,252,249,.76);
+  --glass-strong:rgba(255,253,250,.95);
+  --glass-line:rgba(255,255,255,.78);
+  --flat-shadow:0 10px 28px rgba(111,70,42,.07);
+}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(255,194,145,.4),transparent 32rem),
+    radial-gradient(circle at 94% 16%,rgba(216,180,254,.22),transparent 30rem),
+    linear-gradient(145deg,#fff8f2 0%,#fff4ec 52%,#f8f2f5 100%);
+  background-attachment:fixed;
+}
+.card{
+  background:var(--glass);
+  border:1px solid var(--glass-line);
+  border-radius:18px;
+  box-shadow:var(--flat-shadow);
+  -webkit-backdrop-filter:blur(20px) saturate(130%);
+  backdrop-filter:blur(20px) saturate(130%);
+}
+.card h2{letter-spacing:.01em}
+.card h2 .num{background:#ffe7d6;color:#c2410c;border-radius:6px}
+.logo{border:1px solid rgba(255,255,255,.7);box-shadow:0 8px 22px rgba(137,78,42,.15)}
+.sunset-line{height:2px;opacity:.8}
+.badge{
+  background:rgba(255,244,227,.7);
+  border-color:rgba(236,177,118,.48);
+  color:#9a4208;
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+}
+.btn{
+  border-color:#e5d2c5;
+  background:rgba(255,253,250,.74);
+  color:#49362c;
+  border-radius:10px;
+  box-shadow:none;
+  transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .16s ease;
+}
+.btn.primary,.btn.primary:hover{background:#e8590c;border-color:#e8590c;color:#fff}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:3px solid rgba(232,89,12,.2);outline-offset:2px}
+input[type=text],input[type=number],select,textarea{
+  background:rgba(255,253,250,.64);
+  border-color:#e5d2c5;
+  border-radius:10px;
+  box-shadow:none;
+}
+input:focus,select:focus,textarea:focus{background:#fffdfa;border-color:#e8590c;box-shadow:0 0 0 3px rgba(232,89,12,.12)}
+.kv > div{background:rgba(255,250,246,.54);border-color:#eadbd1;border-radius:12px}
+.code{background:#fff0e4;border-color:#edb98e;color:#c2410c;border-radius:7px}
+.note{background:rgba(255,240,228,.72);border-color:rgba(240,195,156,.55);color:#714126;border-radius:12px}
+.note.ok{background:rgba(230,247,241,.78);border-color:rgba(174,222,202,.72);color:#0a6b4f}
+.note.warn{background:rgba(255,244,227,.82);border-color:rgba(236,190,135,.66);color:#9a4208}
+.roster-state.ok{background:rgba(230,247,241,.84)}
+.roster-state.warn{background:rgba(255,244,227,.84)}
+.progress{height:6px;background:rgba(119,88,67,.13)}
+.progress > i,.bar > i{background:#e8590c}
+.chip{border-radius:7px}
+.chip.ok{background:rgba(230,247,241,.8);border-color:rgba(174,222,202,.75)}
+.chip.bad{background:rgba(255,240,240,.82);border-color:rgba(244,188,188,.75)}
+.tablewrap{border:1px solid rgba(234,219,209,.8);border-radius:12px;background:rgba(255,253,250,.38)}
+th{background:rgba(250,241,234,.8);color:#796255}
+th:first-child{border-radius:11px 0 0 0}
+th:last-child{border-radius:0 11px 0 0}
+tr.hi td{background:rgba(255,240,228,.56)}
+tfoot td{background:rgba(250,241,234,.84)}
+details{background:rgba(255,250,246,.52);border-color:#eadbd1;border-radius:12px}
+details .body{color:#59463b}
+code{background:rgba(255,231,214,.72);color:#9a4208}
+.formula{background:#342820;color:#fff5ed;border-radius:10px}
+.bar{height:7px;background:rgba(119,88,67,.13)}
+footer{color:#8b7365}
+@media(hover:hover){
+  .btn:hover{background:#fff7f1;border-color:#e8590c;color:#c2410c}
+  .btn.primary:hover{background:#d9480f;color:#fff}
+}
+@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .card{background:var(--glass-strong)}
+}
+@media(max-width:600px){.card{border-radius:16px}}
+@media(prefers-reduced-transparency:reduce){
+  .card,.badge{background:#fffaf6;-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+@media print{
+  body{background:#fff}
+  .card{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:0}
+  .tablewrap{border:0;background:#fff}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
